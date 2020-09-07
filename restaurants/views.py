@@ -2,7 +2,11 @@ from django.shortcuts import render, redirect
 from .models import Restaurant, Item
 from .forms import RestaurantForm, ItemForm, SignupForm, SigninForm
 from django.contrib.auth import login, authenticate, logout
+from django.http import Http404
 
+
+def msg(request):
+    return render(request, 'msg.html')
 def signup(request):
     form = SignupForm()
     if request.method == 'POST':
@@ -59,6 +63,8 @@ def restaurant_detail(request, restaurant_id):
     return render(request, 'detail.html', context)
 
 def restaurant_create(request):
+    if request.user.is_anonymous:
+        return redirect('signin')
     form = RestaurantForm()
     if request.method == "POST":
         form = RestaurantForm(request.POST, request.FILES)
@@ -75,6 +81,10 @@ def restaurant_create(request):
 def item_create(request, restaurant_id):
     form = ItemForm()
     restaurant = Restaurant.objects.get(id=restaurant_id)
+    if request.user.is_anonymous:
+        return redirect('signin')
+    if not (restaurant.owner==request.user or request.user.is_staff):
+        return redirect('msg')
     if request.method == "POST":
         form = ItemForm(request.POST)
         if form.is_valid():
@@ -91,6 +101,10 @@ def item_create(request, restaurant_id):
 def restaurant_update(request, restaurant_id):
     restaurant_obj = Restaurant.objects.get(id=restaurant_id)
     form = RestaurantForm(instance=restaurant_obj)
+    if request.user.is_anonymous:
+        return redirect('signin')
+    if not (restaurant_obj.owner.username==request.user.username or request.user.is_staff):
+        return redirect('msg')
     if request.method == "POST":
         form = RestaurantForm(request.POST, request.FILES, instance=restaurant_obj)
         if form.is_valid():
@@ -103,6 +117,10 @@ def restaurant_update(request, restaurant_id):
     return render(request, 'update.html', context)
 
 def restaurant_delete(request, restaurant_id):
+    if request.user.is_anonymous:
+        return redirect('signin')
+    if not request.user.is_staff:
+        raise Http404
     restaurant_obj = Restaurant.objects.get(id=restaurant_id)
     restaurant_obj.delete()
     return redirect('restaurant-list')

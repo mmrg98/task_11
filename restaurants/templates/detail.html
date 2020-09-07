@@ -12,6 +12,7 @@
   {% endif %}
   <div class="card-body">
     <h5 class="card-title">{{restaurant.name}}</h5>
+    <p class="card-text">{{restaurant.owner|linebreaks}}</p>
     <p class="card-text">{{restaurant.description|linebreaks}}</p>
     <p class="card-text">Opening Time: {{restaurant.opening_time}}</p>
     <p class="card-text">Closing Time: {{restaurant.closing_time}}</p>
@@ -30,15 +31,20 @@
   </ul>
   <div class="card-body">
     <div class="row text-center">
+      {% if request.user.is_staff or request.user == restaurant.owner %}
         <div class="col-md-4">
             <a href="{% url 'restaurant-update' restaurant.id %}" class="btn btn-outline-primary btn-block">Update</a>
         </div>
-        <div class="col-md-4">
-            <a href="{% url 'restaurant-delete' restaurant.id %}" class="btn btn-outline-danger btn-block">Delete</a>
-        </div>
+
         <div class="col-md-4">
             <a href="{% url 'item-create' restaurant.id %}" class="btn btn-outline-success btn-block">Add Item</a>
         </div>
+        {% endif %}
+        {% if request.user.is_staff %}
+        <div class="col-md-4">
+            <a href="{% url 'restaurant-delete' restaurant.id %}" class="btn btn-outline-danger btn-block">Delete</a>
+        </div>
+        {% endif %}
     </div>
   </div>
 </div>
